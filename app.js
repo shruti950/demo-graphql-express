@@ -37,11 +37,13 @@ schema:buildSchema(`
             name:String!
             age:Int!
             date:String
+            creator:Admin!
       }
       type Admin{
             _id:ID!
             email:String!
             password:String
+            createdUser:[Event!]
       }
       input AdminInput{
             email:String!
@@ -65,19 +67,20 @@ schema:buildSchema(`
       }`),
       rootValue:{
             events:()=>{
-                  return Event.find().then(event=>event).catch(error=>error); 
+                  return Event.find().populate('creator').then(event=>{
+                       return  event}).catch(error=>error); 
             },
             createEvent:(args)=>{
                         const  event={
                               name:args.eventInput.name,
                               age:args.eventInput.age,
                               date:new Date(args.eventInput.date),
-                              creator:"61725f696a0c7b8e6137432b"
+                              creator:"6172a33b192eb094873e1085"
                         };
                         let createEvent;
                         return new Event(event).save().then(event=>{
                               createEvent = event;
-                              return Admin.findById("61725f696a0c7b8e6137432b")
+                              return Admin.findById("6172a33b192eb094873e1085")
                         }).then(admin=>{
                               if(!admin){
                                     throw new Error("admin is not found")
@@ -88,29 +91,7 @@ schema:buildSchema(`
                               return event
                         }).catch(error=>{
                               throw error})
-                        
-                  // return Admin.findById("61725f696a0c7b8e6137432b").then(admin=>{
-                  //       console.log("admin",admin);
-                  //       if(!admin){
-                  //             throw new Error("userid is not available")
-                  //       }
-                  //       admin.createdUser.push(event);
-                  //       console.log("admikn",admin.createdUser,event);
-                  //       admin.save();
-                  //       return new Event(event).save().then(event=>{
-                  //             console.log("event",event);
-                  //             return event;
-                  //       }).catch(error=>{
-                  //             console.log("error",error);
-                  //       })
-                  // })
-                  
-            //      return new Event(event).save().then(event=>{
-            //            console.log("event",event);
-            //            return event;
-            //      }).catch(error=>{
-            //            console.log("error",error);
-            //      })
+           
             },
             createAdmin:args=>{
                   return Admin.findOne({email:args.adminInput.email}).then(email=>{

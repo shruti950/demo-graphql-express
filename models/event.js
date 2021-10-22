@@ -11,6 +11,10 @@ const eventSchema = new mongoose.Schema ({
   },
   date : {
     type : Date
+  },
+  creator : {
+    type : mongoose.Schema.Types.ObjectId,
+    ref : "Admin"
   }
 })
 

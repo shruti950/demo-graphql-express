@@ -10,16 +10,17 @@ const mongoose = require('mongoose');
 // const schema = require('./schema');
 const { graphqlHTTP } = require('express-graphql');
 const { buildSchema } = require('graphql');
+const Event = require('./models/event')
 const bodyParser = require('body-parser');
 const cors = require('cors');
 // const { ApolloServer } = require('apollo-server-express');
-const url = "mongodb://localhost:27017/moviesdb";
-// const connect = mongoose.connect(url, { useNewUrlParser: true });
-// connect.then((db) => {
-//       console.log('Connected correctly to server!');
-// }, (err) => {
-//       console.log(err);
-// });
+const url = "mongodb://localhost:27017/events";
+const connect = mongoose.connect(url, { useNewUrlParser: true });
+connect.then((db) => {
+app.listen(4000, () => console.log('Express GraphQL Server Now Running On localhost:4000/graphql'));
+}, (err) => {
+      console.log(err);
+});
 // const server = new ApolloServer({
 //       typeDefs: schema.typeDefs,
 //       resolvers: schema.resolvers
@@ -52,25 +53,27 @@ schema:buildSchema(`
       }`),
       rootValue:{
             events:()=>{
-                  return events; 
+                  return Event.find().then(event=>event).catch(error=>error); 
             },
             createEvent:(args)=>{
                   const event={
-                        _id:Math.random().toString(),
                         name:args.eventInput.name,
                         age:args.eventInput.age,
-                        date:args.eventInput.date
+                        date:new Date(args.eventInput.date).toString()
                   }
                   
-                  events.push(event)
-                  return event;
+                 return new Event(event).save().then(event=>{
+                       console.log("event",event);
+                       return event;
+                 }).catch(error=>{
+                       console.log("error",error);
+                 })
             }
       },
       graphiql:true
       
 }))
 // app.listen(4000);
-app.listen(4000, () => console.log('Express GraphQL Server Now Running On localhost:4000/graphql'));
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');

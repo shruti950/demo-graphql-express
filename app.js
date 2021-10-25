@@ -29,7 +29,24 @@ app.listen(4000, () => console.log('Express GraphQL Server Now Running On localh
 // });
 
 var app = express();
-const events=[]
+const eventPopulate =  eventId => {
+      return  Event.find({_id:{$in : eventId}}).then(async events=>{
+                  return  events;
+      }).catch(error=>{
+            throw error;
+      })
+}
+
+const adminPopulate = adminId => {
+      return Admin.findById(adminId).then(async admins=>{
+            let events = await eventPopulate(admins.createdUser)
+            admins.createdUser = events
+            return admins
+      })
+      .catch(error=>{
+            throw error;
+      })
+}
 app.use('/graphql',graphqlHTTP({
 schema:buildSchema(`
       type Event{
@@ -67,8 +84,13 @@ schema:buildSchema(`
       }`),
       rootValue:{
             events:()=>{
-                  return Event.find().populate('creator').then(event=>{
-                       return  event}).catch(error=>error); 
+                  return Event.find().then(events => {
+                        return events.map(async event => {
+                              event.creator = await adminPopulate(event.creator);
+                              return event
+                        //   return { ...event._doc ,creator:admin.bind(this,event._doc.creator)};
+                        });
+                      }).catch(error=>error); 
             },
             createEvent:(args)=>{
                         const  event={

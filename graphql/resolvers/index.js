@@ -2,7 +2,7 @@ var moment = require('moment'); // require
 const bcrypt = require("bcrypt")
 const Event = require('../../models/event')
 const Admin = require('../../models/admin')
-
+const jwt = require('jsonwebtoken')
 const eventPopulate =  eventId => {
   return  Event.find({_id:{$in : eventId}}).then(async events=>{
               return  events;
@@ -10,7 +10,6 @@ const eventPopulate =  eventId => {
         throw error;
   })
 }
-console.log("date",{date:moment("2021-10-25T10:44:39.954+05:30").format()} );
 
 const adminPopulate = adminId => {
   return Admin.findById(adminId).then(async admins=>{
@@ -29,35 +28,36 @@ module.exports={
               return events.map(async event => {
                     event.date =  moment(event.date).format('DD/YY');
                     event.creator = await adminPopulate(event.creator);
-                    console.log("%c 🕶️: event ", "font-size:16px;background-color:#0a96f5;color:white;", event)
                     event.date =new Date(event.date).toISOString()
-                    console.log("%c 🇰🇭: event.date ", "font-size:16px;background-color:#45f7a6;color:black;", event.date)
                     return event
               //   return { ...event._doc ,creator:admin.bind(this,event._doc.creator)};
               });
             }).catch(error=>error); 
   },
-  createEvent:(args)=>{
-              const  event={
-                    name:args.eventInput.name,
-                    age:args.eventInput.age,
-                    date:new Date().toISOString(),
-                    creator:"6172a33b192eb094873e1085"
-              };
-              let createEvent;
-              return new Event(event).save().then(event=>{
-                    createEvent = event;
-                    return Admin.findById("6172a33b192eb094873e1085")
-              }).then(admin=>{
-                    if(!admin){
-                          throw new Error("admin is not found")
-                    }
-                    admin.createdUser.push(createEvent);
-                    return admin.save()
-              }).then(result=>{
-                    return event
-              }).catch(error=>{
-                    throw error})
+  createEvent:(args,req)=>{
+    if(!req.isAuth){
+      throw new Error('Invalid token')
+    }
+    const  event={
+          name:args.eventInput.name,
+          age:args.eventInput.age,
+          date:new Date().toISOString(),
+          creator:"6172a33b192eb094873e1085"
+    };
+    let createEvent;
+    return new Event(event).save().then(event=>{
+          createEvent = event;
+          return Admin.findById("6172a33b192eb094873e1085")
+    }).then(admin=>{
+          if(!admin){
+                throw new Error("admin is not found")
+          }
+          admin.createdUser.push(createEvent);
+          return admin.save()
+    }).then(result=>{
+          return event
+    }).catch(error=>{
+          throw error})
  
   },
   createAdmin:args=>{
@@ -80,6 +80,28 @@ module.exports={
                     throw error;
               })
         })
+  },
+  login:({email,password})=>{
+    let userFound;
+    return Admin.findOne({email:email}).then(user=>{
+      if(!user){
+        throw new Error('User is not exists');
+      }
+      userFound = user
+      return bcrypt.compare(password,user.password)
+    }).then(passwordCheck=>{
+      if(!passwordCheck){
+        throw new Error('password is incorrect');
+      }
+      return jwt.sign({userId:userFound._id,email:userFound.email},'secretkey',{expiresIn: "1h"})
+    }).then(token=>{
+      if(!token){
+        throw new Error('token invalid')
+      }
+      return {userId:userFound._id,token:token ,tokenExpiration:1}
+    }).catch(error=>{
+      throw error;
+    })
   }
 }
 

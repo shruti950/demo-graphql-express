@@ -8,9 +8,10 @@ var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 const mongoose = require('mongoose');
 const { graphqlHTTP } = require('express-graphql');
-
+const { validate, ValidationError, Joi } = require('express-validation')
 const graphQlSchema = require ('./graphql/schema/index');
 const graphQlResolver = require('./graphql/resolvers/index')
+const isAuth = require('./middlewares/auth')
 const url = "mongodb://localhost:27017/events";
 const connect = mongoose.connect(url, { useNewUrlParser: true });
 connect.then((db) => {
@@ -18,21 +19,17 @@ app.listen(4000, () => console.log('Express GraphQL Server Now Running On localh
 }, (err) => {
       console.log(err);
 });
-// const server = new ApolloServer({
-//       typeDefs: schema.typeDefs,
-//       resolvers: schema.resolvers
-// });
 
 var app = express();
 
+app.use(isAuth)
 app.use('/graphql',graphqlHTTP({
       schema:graphQlSchema,
       rootValue:graphQlResolver,
       graphiql:true
       
 }))
-// app.listen(4000);
-// view engine setup
+
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 
@@ -49,7 +46,13 @@ app.use('/users', usersRouter);
 app.use(function(req, res, next) {
   next(createError(404));
 });
-
+app.use(function(err, req, res, next) {
+      if (err instanceof ValidationError) {
+        return res.status(err.statusCode).json(err)
+      }
+    
+      return res.status(500).json(err)
+    })
 // error handler
 app.use(function(err, req, res, next) {
   // set locals, only providing error in development

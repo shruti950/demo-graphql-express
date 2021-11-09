@@ -1,5 +1,5 @@
 .App {
-  text-align: center;
+  /* text-align: center; */
 }
 
 .App-logo {
@@ -35,4 +35,12 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+.title{
+  padding-left: 10px;
+  display: flex;
+  background: rgb(120, 120, 238);
+  color: rgb(255, 255, 255);
+  justify-content: space-between;
 }

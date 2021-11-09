@@ -38,16 +38,17 @@ module.exports={
     if(!req.isAuth){
       throw new Error('Invalid token')
     }
+    let userId = req.userId
     const  event={
           name:args.eventInput.name,
           age:args.eventInput.age,
           date:new Date().toISOString(),
-          creator:"6172a33b192eb094873e1085"
+          creator:req.userId
     };
     let createEvent;
     return new Event(event).save().then(event=>{
           createEvent = event;
-          return Admin.findById("6172a33b192eb094873e1085")
+          return Admin.findById(userId)
     }).then(admin=>{
           if(!admin){
                 throw new Error("admin is not found")

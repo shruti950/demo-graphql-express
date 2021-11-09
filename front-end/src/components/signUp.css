@@ -1,0 +1,28 @@
+.form-control label,
+.form-control input {
+  width: 100%;
+  display: block;
+}
+
+.form-control input{
+  margin-bottom: 10px;
+  padding: 3px;
+  border-radius: 3px;
+  border: 1px solid black;
+}
+.form-control label{
+  margin-bottom: 5px;
+}
+.auto-form {
+  width: 25%;
+  max-width: 80%;
+  margin:0 5rem 0 37rem;
+}
+
+
+
+h4{
+  justify-content: center;
+  display: flex;
+  flex: 1;
+}
